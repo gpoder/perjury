@@ -1,0 +1,24 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Viewing image</title>
+  <style>
+    body { background:#111;color:#fff;text-align:center;font-family:sans-serif;padding:2em; }
+    img { max-width:100%;border-radius:6px;box-shadow:0 2px 10px rgba(0,0,0,.4);margin-top:20px; }
+    .hidden { display:none; }
+  </style>
+</head>
+<body>
+  <h1>Image will show for {{ display_seconds }} seconds</h1>
+  <div id="imgwrap"><img src="{{ image_url }}" alt=""></div>
+  <p id="msg" class="hidden">Image expired — access is now blocked.</p>
+  <script>
+    setTimeout(function() {
+      document.getElementById('imgwrap').innerHTML =
+        '<div style="padding:2em;background:#222;border-radius:6px;">Image hidden</div>';
+      document.getElementById('msg').classList.remove('hidden');
+    }, {{ display_ms }});
+  </script>
+</body>
+</html>

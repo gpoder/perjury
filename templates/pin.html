@@ -1,0 +1,24 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>PIN Access</title>
+  <style>
+    body { font-family:sans-serif; background:#f5f5f5; text-align:center; padding:60px; }
+    .box { background:white; padding:25px; border-radius:8px; display:inline-block; box-shadow:0 0 6px rgba(0,0,0,.1); }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h2>Enter 4-digit PIN</h2>
+    <form method="post" action="{{ url_for('main.login') }}">
+      <input name="pin" type="password" maxlength="4" pattern="\d{4}" required>
+      <br><button type="submit">View</button>
+    </form>
+    <p style="color:#666;font-size:0.9em;">
+      Once viewed, your IP is permanently blocked.
+      If Lock Mode = "all_ip", all clients are blocked temporarily.
+    </p>
+  </div>
+</body>
+</html>
