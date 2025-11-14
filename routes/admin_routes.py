@@ -7,16 +7,33 @@ from ..settings import SETTINGS, save_settings
 from ..utils import BLOCKS_DIR, load_json, log_event, load_log, GLOBAL_BLOCK_FILE
 from ..blocks import block_file, clear_global_block
 
-admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
+admin_bp = Blueprint("control", __name__, url_prefix="/control")
 
+@admin_bp.before_request
+def bypass_all_ip_blocks():
+    # admin always allowed, key must still match
+    return None
 
 @admin_bp.route("/", methods=["GET", "POST"])
 def admin_index():
+    from ..settings import SETTINGS  # ensure we see the live SETTINGS
+
     admin_key = request.args.get("key", "")
+
+    # 🔍 DEBUG: print and also echo in response if wrong
+    print("[ADMIN DEBUG] args:", dict(request.args))
+    print("[ADMIN DEBUG] admin_key:", repr(admin_key))
+    print("[ADMIN DEBUG] expected:", repr(SETTINGS.get("ADMIN_KEY")))
+
     if admin_key != SETTINGS.get("ADMIN_KEY"):
-        return "Forbidden", 403
+        # TEMP: show mismatch clearly in the browser
+        return (
+            f"Forbidden (admin_key={admin_key!r}, expected={SETTINGS.get('ADMIN_KEY')!r})",
+            403,
+        )
 
     ip = request.remote_addr or "unknown"
+    # ... keep the rest of the existing function below this ...
 
     if request.method == "POST":
         old = SETTINGS.copy()
@@ -37,7 +54,7 @@ def admin_index():
 
         save_settings()
         log_event("admin_update_settings", ip=ip, extra={"old": old, "new": SETTINGS})
-        return redirect(url_for("admin.admin_index") + f"?key={SETTINGS['ADMIN_KEY']}")
+        return redirect(url_for("control.admin_index") + f"?key={SETTINGS['ADMIN_KEY']}")
 
     # GET
     logs = load_log()
@@ -72,6 +89,7 @@ def admin_index():
 
 @admin_bp.route("/delete_block")
 def admin_delete_block():
+    from ..settings import SETTINGS
     admin_key = request.args.get("key", "")
     if admin_key != SETTINGS.get("ADMIN_KEY"):
         return "Forbidden", 403
@@ -83,11 +101,12 @@ def admin_delete_block():
             os.remove(path)
             log_event("admin_delete_block", ip=request.remote_addr or "unknown", extra={"target_ip": target_ip})
 
-    return redirect(url_for("admin.admin_index") + f"?key={SETTINGS['ADMIN_KEY']}")
+    return redirect(url_for("control.admin_index") + f"?key={SETTINGS['ADMIN_KEY']}")
 
 
 @admin_bp.route("/clear_log")
 def admin_clear_log():
+    from ..settings import SETTINGS
     admin_key = request.args.get("key", "")
     if admin_key != SETTINGS.get("ADMIN_KEY"):
         return "Forbidden", 403
@@ -95,14 +114,24 @@ def admin_clear_log():
     from ..utils import save_log
     save_log([])
     log_event("admin_clear_log", ip=request.remote_addr or "unknown")
-    return redirect(url_for("admin.admin_index") + f"?key={SETTINGS['ADMIN_KEY']}")
+    return redirect(url_for("control.admin_index") + f"?key={SETTINGS['ADMIN_KEY']}")
 
 
 @admin_bp.route("/clear_global")
 def admin_clear_global_route():
+    from ..settings import SETTINGS
+
     admin_key = request.args.get("key", "")
+    print("[CLEAR DEBUG] args:", dict(request.args))
+    print("[CLEAR DEBUG] admin_key:", repr(admin_key))
+    print("[CLEAR DEBUG] expected:", repr(SETTINGS.get("ADMIN_KEY")))
+
     if admin_key != SETTINGS.get("ADMIN_KEY"):
-        return "Forbidden", 403
+        return (
+            f"Forbidden (admin_key={admin_key!r}, expected={SETTINGS.get('ADMIN_KEY')!r})",
+            403,
+        )
 
     clear_global_block()
-    return redirect(url_for("admin.admin_index") + f"?key={SETTINGS['ADMIN_KEY']}")
+    return redirect(url_for("control.admin_index") + f"?key={SETTINGS['ADMIN_KEY']}")
+

@@ -12,6 +12,14 @@ def create_app():
     ensure_dirs()
     load_settings()
 
+    # 🔍 DEBUG: dump effective settings at startup
+    from .settings import SETTINGS
+    print("\n==============================")
+    print("Perjury App Settings Loaded:")
+    for k, v in SETTINGS.items():
+        print(f"  {k}: {v}")
+    print("==============================\n")
+
     app = Flask(__name__, template_folder="templates", static_folder="static")
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_host=1)
 
