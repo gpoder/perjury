@@ -1,0 +1,83 @@
+###############################################
+# PYTHON / FLASK PROJECT GITIGNORE
+# Customized for perjury_app project
+###############################################
+
+###############
+# PYTHON CACHE
+###############
+__pycache__/
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+#####################
+# VIRTUAL ENVIRONMENTS
+#####################
+venv/
+env/
+.venv/
+ENV/
+
+###############
+# OS JUNK
+###############
+.DS_Store
+Thumbs.db
+
+###############
+# EDITOR FILES
+###############
+.vscode/
+.idea/
+*.iml
+*.swp
+*.swo
+
+###############################################
+# APP RUNTIME DATA
+# (auto-generated during normal operation)
+###############################################
+
+# Blocked IP entries
+data/blocks/
+!data/blocks/.gitkeep
+
+# Active tokens
+data/tokens/
+!data/tokens/.gitkeep
+
+# Logs & runtime global state
+data/log.json
+data/global.json
+
+# If you do NOT want to commit real settings, uncomment:
+# data/settings.json
+
+###############################################
+# STATIC / MEDIA FILES
+###############################################
+# Ignore generated image files unless intentional
+image.png
+
+###############
+# LOG FILES
+###############
+*.log
+
+###############################
+# BUILD & DISTRIBUTION OUTPUTS
+###############################
+dist/
+build/
+*.tar.gz
+*.zip
+
+###############################
+# TEMP / BACKUP FILES
+###############################
+*.bak
+*.tmp
+*.old
+

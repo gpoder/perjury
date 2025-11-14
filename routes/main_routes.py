@@ -61,7 +61,7 @@ def home():
 @main_bp.route("/login", methods=["POST"])
 def login():
     from ..settings import SETTINGS
-    
+
     posted_pin = request.form.get("pin", "")
     print("[LOGIN DEBUG] posted_pin:", repr(posted_pin))
     print("[LOGIN DEBUG] expected PIN:", repr(SETTINGS.get("PIN")))
@@ -117,6 +117,7 @@ def serve_image(token):
 
 @main_bp.route("/debug")
 def debug_view():
+    from ..settings import SETTINGS
     key = request.args.get("key", "")
     if key != SETTINGS.get("DEBUG_KEY"):
         return "Invalid debug key", 403
@@ -131,6 +132,7 @@ def debug_view():
 
 @main_bp.route("/shutdown")
 def shutdown():
+    from ..settings import SETTINGS
     key = request.args.get("key", "")
     if key != SETTINGS.get("SHUTDOWN_KEY"):
         return "Invalid key", 403
