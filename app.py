@@ -1,5 +1,6 @@
 
 from flask import Flask
+from .utils import t
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 from .utils import ensure_dirs
@@ -21,6 +22,7 @@ def create_app():
     print("==============================\n")
 
     app = Flask(__name__, template_folder="templates", static_folder="static")
+    app.jinja_env.globals['t'] = t
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_host=1)
 
     @app.template_filter("timestamp")
