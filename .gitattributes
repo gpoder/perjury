@@ -1,0 +1,18 @@
+# Ensure consistent line endings across all OSes
+* text=auto
+
+# Python files always use LF
+*.py text eol=lf
+
+# Shell scripts
+*.sh text eol=lf
+
+# Windows-friendly files keep CRLF
+*.bat text eol=crlf
+
+# Do not change binary files
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.zip binary
