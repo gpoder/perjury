@@ -21,6 +21,9 @@ def admin_index():
     admin_key = request.args.get("key", "")
 
     # 🔍 DEBUG: print and also echo in response if wrong
+    print("[ADMIN DEBUG] args:", dict(request.args))
+    print("[ADMIN DEBUG] admin_key:", repr(admin_key))
+    print("[ADMIN DEBUG] expected:", repr(SETTINGS.get("ADMIN_KEY")))
 
     if admin_key != SETTINGS.get("ADMIN_KEY"):
         # TEMP: show mismatch clearly in the browser
@@ -119,6 +122,9 @@ def admin_clear_global_route():
     from ..settings import SETTINGS
 
     admin_key = request.args.get("key", "")
+    print("[CLEAR DEBUG] args:", dict(request.args))
+    print("[CLEAR DEBUG] admin_key:", repr(admin_key))
+    print("[CLEAR DEBUG] expected:", repr(SETTINGS.get("ADMIN_KEY")))
 
     if admin_key != SETTINGS.get("ADMIN_KEY"):
         return (
@@ -128,3 +134,4 @@ def admin_clear_global_route():
 
     clear_global_block()
     return redirect(url_for("control.admin_index") + f"?key={SETTINGS['ADMIN_KEY']}")
+
