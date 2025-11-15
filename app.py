@@ -1,4 +1,3 @@
-
 from flask import Flask
 from .utils import t
 from werkzeug.middleware.proxy_fix import ProxyFix
@@ -21,7 +20,7 @@ def create_app():
         print(f"  {k}: {v}")
     print("==============================\n")
 
-    app = Flask(__name__, template_folder="templates", static_folder="static")
+    app = Flask(__name__, template_folder="templates", static_folder="static", static_url_path="/perjury/static")
     app.jinja_env.globals['t'] = t
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_host=1)
 
@@ -38,3 +37,7 @@ def create_app():
     app.register_blueprint(admin_bp)
 
     return app
+
+# expose a WSGI app for gunicorn
+app = create_app()
+
