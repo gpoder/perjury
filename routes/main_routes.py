@@ -154,3 +154,7 @@ remote_addr     : {request.remote_addr}
 X-Real-IP       : {request.headers.get('X-Real-IP')}
 X-Forwarded-For : {request.headers.get('X-Forwarded-For')}
 </pre>"""
+@main_bp.route("/login", methods=["GET"])
+def login_get():
+    # Provide helpful response for GET
+    return redirect(url_for("main.index")) if hasattr(main_bp, "index") else ("Use POST", 405)

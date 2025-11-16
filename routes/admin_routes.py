@@ -7,7 +7,7 @@ from ..settings import SETTINGS, save_settings
 from ..utils import BLOCKS_DIR, load_json, log_event, load_log, GLOBAL_BLOCK_FILE
 from ..blocks import block_file, clear_global_block
 
-admin_bp = Blueprint("control", __name__, url_prefix="/control")
+admin_bp = Blueprint("control", __name__, url_prefix="/control", strict_slashes=False)
 
 @admin_bp.before_request
 def bypass_all_ip_blocks():

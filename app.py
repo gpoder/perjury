@@ -35,6 +35,12 @@ def create_app():
     app.register_blueprint(main_bp, url_prefix="/perjury")
     app.register_blueprint(admin_bp, url_prefix="/perjury")
 
+    
+@app.route('/favicon.ico')
+def favicon():
+    from flask import send_from_directory
+    return send_from_directory(app.static_folder, 'favicon.ico', mimetype='image/vnd.microsoft.icon')
+
     return app
 
 app = create_app()
