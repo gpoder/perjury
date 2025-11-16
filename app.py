@@ -1,5 +1,5 @@
+
 from flask import Flask
-from .utils import t
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 from .utils import ensure_dirs
@@ -21,7 +21,6 @@ def create_app():
     print("==============================\n")
 
     app = Flask(__name__, template_folder="templates", static_folder="static", static_url_path="/perjury/static")
-    app.jinja_env.globals['t'] = t
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_host=1)
 
     @app.template_filter("timestamp")
@@ -33,11 +32,9 @@ def create_app():
         except Exception:
             return "-"
 
-    app.register_blueprint(main_bp)
-    app.register_blueprint(admin_bp)
+    app.register_blueprint(main_bp, url_prefix="/perjury")
+    app.register_blueprint(admin_bp, url_prefix="/perjury")
 
     return app
 
-# expose a WSGI app for gunicorn
 app = create_app()
-

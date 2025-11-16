@@ -63,8 +63,6 @@ def login():
     from ..settings import SETTINGS
 
     posted_pin = request.form.get("pin", "")
-    print("[LOGIN DEBUG] posted_pin:", repr(posted_pin))
-    print("[LOGIN DEBUG] expected PIN:", repr(SETTINGS.get("PIN")))
 
     ip = request.remote_addr or "unknown"
     pin = request.form.get("pin", "")

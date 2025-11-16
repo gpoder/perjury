@@ -2,17 +2,23 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>{{ t('pin_pin_access') }}</title>
-  <style>{{ t('pin_body_font_family_sans_serif_background_f5f5f5_text_align_center_padding_60px_box_background_white_padding_25px_border_radius_8px_display_inline_block_box_shadow_0_0_6px_rgba_0_0_0_1') }}</style>
+  <title>PIN Access</title>
+  <style>
+    body { font-family:sans-serif; background:#f5f5f5; text-align:center; padding:60px; }
+    .box { background:white; padding:25px; border-radius:8px; display:inline-block; box-shadow:0 0 6px rgba(0,0,0,.1); }
+  </style>
 </head>
 <body>
   <div class="box">
-    <h2>{{ t('pin_enter_4_digit_pin') }}</h2>
+    <h2>Enter 4-digit PIN</h2>
     <form method="post" action="{{ url_for('main.login') }}">
       <input name="pin" type="password" maxlength="4" pattern="\d{4}" required>
-      <br><button type="submit">{{ t('pin_view') }}</button>
+      <br><button type="submit">View</button>
     </form>
-    <p style="color:#666;font-size:0.9em;">{{ t('pin_once_viewed_your_ip_is_permanently_blocked_if_lock_mode_all_ip_all_clients_are_blocked_temporarily') }}</p>
+    <p style="color:#666;font-size:0.9em;">
+      Once viewed, your IP is permanently blocked.
+      If Lock Mode = "all_ip", all clients are blocked temporarily.
+    </p>
   </div>
 </body>
 </html>
