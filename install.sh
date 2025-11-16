@@ -3,11 +3,13 @@ set -e
 set -o pipefail
 
 echo "==============================================="
-echo "  Perjury App Installer"
-echo "  Installing on Ubuntu (e.g. AWS EC2)"
+echo "  Perjury App Installer / Updater"
+echo "  Safe to run multiple times"
 echo "==============================================="
 
-# Must run as root
+# ------------------------------
+# CHECK ROOT
+# ------------------------------
 if [[ "$EUID" -ne 0 ]]; then
     echo "❌ ERROR: Please run as root (sudo ./install.sh)"
     exit 1
@@ -19,71 +21,70 @@ VENV_DIR="$APP_DIR/venv"
 SYSTEMD_FILE="/etc/systemd/system/perjury.service"
 NGINX_CONF="/etc/nginx/conf.d/perjury.conf"
 
+# ------------------------------
+# INSTALL DEPENDENCIES
+# ------------------------------
 echo "🔧 Installing required packages..."
 apt update -y
 apt install -y python3 python3-venv python3-pip nginx git unzip
 
-# ------------------------------------------------------------------------------
-# COPY REPO INTO /opt/dispatcher
-# ------------------------------------------------------------------------------
-
-echo "📁 Preparing dispatcher directory at $DISPATCHER_DIR ..."
+# ------------------------------
+# COPY UPDATED APPLICATION CODE
+# ------------------------------
+echo "📁 Preparing dispatcher directory..."
 mkdir -p "$DISPATCHER_DIR"
 
-echo "📦 Copying Perjury app into $APP_DIR ..."
+echo "📦 Updating application files in $APP_DIR ..."
+mkdir -p "$APP_DIR"
+
+# Preserve data directory
+echo "🔒 Preserving existing /data folder if present..."
+if [[ -d "$APP_DIR/data" ]]; then
+    mv "$APP_DIR/data" /tmp/perjury_data_backup_$$
+fi
+
+# Replace app contents
 rm -rf "$APP_DIR"
 mkdir -p "$APP_DIR"
 cp -R . "$APP_DIR"
 
-echo "👤 Setting ownership and permissions..."
+# Restore data
+if [[ -d "/tmp/perjury_data_backup_$$" ]]; then
+    echo "♻️ Restoring preserved data folder..."
+    mv "/tmp/perjury_data_backup_$$" "$APP_DIR/data"
+fi
+
+echo "👤 Setting permissions..."
 chown -R www-data:www-data "$APP_DIR"
 chmod -R 755 "$APP_DIR"
 
-# ------------------------------------------------------------------------------
-# PYTHON VENV
-# ------------------------------------------------------------------------------
+# ------------------------------
+# PYTHON VENV (REUSED IF EXISTS)
+# ------------------------------
+if [[ ! -d "$VENV_DIR" ]]; then
+    echo "🐍 Creating new Python virtual environment..."
+    python3 -m venv "$VENV_DIR"
+else
+    echo "🐍 Using existing Python virtual environment..."
+fi
 
-echo "🐍 Creating Python virtual environment..."
-python3 -m venv "$VENV_DIR"
-
+echo "📦 Installing / updating Python dependencies..."
 source "$VENV_DIR/bin/activate"
 
 if [[ -f "$APP_DIR/requirements.txt" ]]; then
-    echo "📦 Installing Python dependencies from requirements.txt ..."
     pip install --upgrade pip
     pip install -r "$APP_DIR/requirements.txt"
 else
-    echo "⚠️ WARNING: requirements.txt not found — installing flask + gunicorn"
     pip install --upgrade pip
     pip install flask gunicorn
 fi
 
 deactivate
 
-# ------------------------------------------------------------------------------
-# OPTIONAL: create a simple main.py entrypoint (for debugging)
-# ------------------------------------------------------------------------------
-
-MAIN_PY="$DISPATCHER_DIR/main.py"
-echo "📝 Writing $MAIN_PY (debug entrypoint)..."
-cat > "$MAIN_PY" << 'EOF'
-from perjury_app.app import create_app
-
-app = create_app()
-
-if __name__ == "__main__":
-    # Simple dev server (not for production)
-    app.run(host="0.0.0.0", port=5000, debug=True)
-EOF
-
-chown www-data:www-data "$MAIN_PY"
-chmod 755 "$MAIN_PY"
-
-# ------------------------------------------------------------------------------
-# SYSTEMD SERVICE (Gunicorn)
-# ------------------------------------------------------------------------------
-
-echo "📝 Creating systemd service at $SYSTEMD_FILE ..."
+# ------------------------------
+# SYSTEMD SERVICE
+# ------------------------------
+echo "📝 Updating systemd service: $SYSTEMD_FILE"
 
 cat > "$SYSTEMD_FILE" <<EOF
 [Unit]
@@ -106,20 +107,17 @@ echo "🔄 Reloading systemd..."
 systemctl daemon-reload
 systemctl enable perjury
 systemctl restart perjury || true
+sleep 1
 
-sleep 2
-systemctl status perjury --no-pager || true
+# ------------------------------
+# NGINX CONFIG (UPDATED + BACKUP)
+# ------------------------------
+echo "🌐 Updating NGINX configuration: $NGINX_CONF"
 
-# ------------------------------------------------------------------------------
-# NGINX CONFIGURATION
-# ------------------------------------------------------------------------------
-
-echo "🛠️ Disabling Ubuntu default nginx site (if present)..."
-if [[ -f /etc/nginx/sites-enabled/default ]]; then
-    rm -f /etc/nginx/sites-enabled/default
+if [[ -f "$NGINX_CONF" ]]; then
+    cp "$NGINX_CONF" "$NGINX_CONF.bak-$(date +%s)"
+    echo "🔒 Backed up old NGINX config."
 fi
-
-echo "🌐 Writing Nginx config to $NGINX_CONF ..."
 
 cat > "$NGINX_CONF" <<EOF
 server {
@@ -137,6 +135,11 @@ server {
         return 200 "ok\n";
     }
 
+    # Avoid favicon spam
+    location = /favicon.ico {
+        empty_gif;
+    }
+
     # Convenience redirect so /perjury -> /perjury/
     location = /perjury {
         return 301 /perjury/;
@@ -145,7 +148,7 @@ server {
     # Landing page
     location = / {
         add_header Content-Type text/html;
-        return 200 "<h2>Perjury Host Installed</h2><p>Try <a href='/perjury/'>/perjury/</a></p>\n";
+        return 200 "<h2>Perjury Host Installed</h2><p>Open <a href='/perjury/'>/perjury/</a></p>\n";
     }
 
     # Proxy all /perjury/* to Gunicorn (Unix socket)
@@ -159,20 +162,18 @@ server {
 }
 EOF
 
-echo "🔍 Testing Nginx configuration..."
+echo "🔍 Testing NGINX config..."
 nginx -t
 
-echo "🔄 Restarting Nginx..."
+echo "🔄 Restarting NGINX..."
 systemctl restart nginx
 
-# ------------------------------------------------------------------------------
+# ------------------------------
 # FINAL STATUS
-# ------------------------------------------------------------------------------
-
+# ------------------------------
 echo "==============================================="
-echo " 🎉 Installation Complete!"
+echo " 🎉 Perjury install/update complete!"
 echo "==============================================="
-echo ""
 echo "App URL:   http://<server-ip>/perjury/"
 echo "Health:    http://<server-ip>/health"
 echo ""
